@@ -15,7 +15,7 @@
         android:label="Starter"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
-        <!-- HOME 入口：只响应桌面意图，不绑定普通图标 -->
+        <!-- 仅作为 HOME，不参与普通「打开应用」解析 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -26,16 +26,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- 设置页：应用图标只进这里 -->
+        <!-- 图标 / 应用列表只进设置页 -->
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
             android:label="Starter"
-            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
