@@ -1,24 +1,33 @@
 plugins {
     id 'com.android.application'
 }
+
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    namespace 'com.wangqifei.eu.org.starter'
+    compileSdkVersion 33
+
     defaultConfig {
         applicationId "com.wangqifei.eu.org.starter"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 3
-        versionName "1.1"
+        versionCode 4
+        versionName "1.2"
     }
+
     buildTypes {
         release { minifyEnabled false }
         debug { minifyEnabled false }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    lintOptions { abortOnError false }
+
+    lintOptions {
+        abortOnError false
+    }
 }
-dependencies {}
+
+dependencies {
+}
