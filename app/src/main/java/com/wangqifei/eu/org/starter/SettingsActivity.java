@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.setBackgroundColor(C_BG);
         scroll.setFillViewport(true);
-        scroll.setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
+        scroll.setDescendantFocusability(android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);

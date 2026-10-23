@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.wangqifei.eu.org.starter">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -15,7 +14,6 @@
         android:label="Starter"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
-        <!-- 仅作为 HOME，不参与普通「打开应用」解析 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -29,7 +27,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 图标 / 应用列表只进设置页 -->
         <activity
             android:name=".SettingsActivity"
             android:exported="true"

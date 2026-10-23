@@ -1,8 +1,0 @@
-*.apk
-*.zip
-.git
-
-.DS_Store
-*.jpg
-*.png
-backup/
