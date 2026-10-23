@@ -114,7 +114,7 @@ public class PickerDialog extends Dialog {
         LinearLayout.LayoutParams boxLp = new LinearLayout.LayoutParams(
                 dp(420), LinearLayout.LayoutParams.WRAP_CONTENT);
         box.setLayoutParams(boxLp);
-        box.setMaximumHeight(dp(480));
+        // max height handled by scroll + parent padding
         // 阻止点击穿透
         box.setOnClickListener(v -> {});
 
@@ -149,7 +149,8 @@ public class PickerDialog extends Dialog {
 
         // 列表
         ScrollView scroll = new ScrollView(getContext());
-        scroll.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
+        LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, dp(360));
+        scroll.setLayoutParams(scrollLp);
         scroll.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         LinearLayout body = new LinearLayout(getContext());
         body.setOrientation(LinearLayout.VERTICAL);
