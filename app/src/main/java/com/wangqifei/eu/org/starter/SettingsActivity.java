@@ -112,6 +112,8 @@ public class SettingsActivity extends Activity {
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.HORIZONTAL);
         body.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
+        body.setClipChildren(false);
+        body.setClipToPadding(false);
 
         LinearLayout left = card();
         left.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1.2f));
@@ -122,7 +124,9 @@ public class SettingsActivity extends Activity {
 
         LinearLayout right = card();
         right.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 0.8f));
-        right.setPadding(dp(14), dp(14), dp(14), dp(14));
+        right.setPadding(dp(16), dp(14), dp(16), dp(16));
+        right.setClipChildren(false);
+        right.setClipToPadding(false);
         buildRight(right);
         body.addView(right);
         page.addView(body);
@@ -248,17 +252,19 @@ public class SettingsActivity extends Activity {
         LinearLayout tile = new LinearLayout(this);
         tile.setOrientation(LinearLayout.VERTICAL);
         tile.setGravity(Gravity.CENTER);
-        tile.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1f));
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, -1, 1f);
+        // 给焦点描边/放大留边，避免被父布局裁切
+        tlp.setMargins(dp(3), dp(3), dp(3), dp(3));
+        tile.setLayoutParams(tlp);
         int bgColor = primary ? C_SAVE_BG : C_TILE;
-        GradientDrawable d = round(bgColor, 12);
-        d.setStroke(dp(1), Color.parseColor("#EBEBEF"));
+        GradientDrawable d = round(bgColor, 14);
+        d.setStroke(dp(1), Color.parseColor("#E8E8ED"));
         tile.setBackground(d);
-        // 内边距减小，按钮更扁
-        tile.setPadding(dp(6), dp(8), dp(6), dp(8));
+        tile.setPadding(dp(8), dp(10), dp(8), dp(10));
         tile.setTag(bgColor);
 
         ImageView ic = new ImageView(this);
-        int is = dp(28);
+        int is = dp(40); // 图标加大，与文字更协调
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(is, is);
         ic.setLayoutParams(ilp);
         ic.setImageResource(iconRes);
@@ -266,9 +272,9 @@ public class SettingsActivity extends Activity {
         ic.setFocusable(false);
         tile.addView(ic);
 
-        TextView lb = text(label, 12, primary ? C_ACCENT : C_TITLE, true);
+        TextView lb = text(label, 11, primary ? C_ACCENT : C_TITLE, true);
         lb.setGravity(Gravity.CENTER);
-        lb.setPadding(0, dp(6), 0, 0);
+        lb.setPadding(0, dp(8), 0, 0);
         tile.addView(lb);
 
         makeFocusable(tile, true, action);
@@ -509,28 +515,25 @@ public class SettingsActivity extends Activity {
     }
 
     private void applyFocusStyle(View view, boolean hasFocus, int normalFill) {
-        if (!(view.getBackground() instanceof GradientDrawable)) {
-            if (hasFocus) {
-                GradientDrawable d = round(Color.WHITE, 10);
-                d.setStroke(dp(2), C_FOCUS);
-                view.setBackground(d);
-            }
-            return;
-        }
-        GradientDrawable d = (GradientDrawable) view.getBackground().mutate();
+        Object tag = view.getTag();
+        int fill = tag instanceof Integer ? (Integer) tag : normalFill;
+
         if (hasFocus) {
-            d.setColor(Color.WHITE);
+            // 白底 + 完整蓝色圆角描边 + 轻微放大 + 阴影
+            GradientDrawable d = round(Color.WHITE, 14);
             d.setStroke(dp(2), C_FOCUS);
-            // 外圈弥散感：再叠一层略大描边色（半透明蓝）
-            view.setScaleX(1.03f);
-            view.setScaleY(1.03f);
-            view.setElevation(dp(8));
+            view.setBackground(d);
+            view.setScaleX(1.025f);
+            view.setScaleY(1.025f);
+            view.setElevation(dp(10));
         } else {
-            // 恢复：需要知道原始填充色 —— 用 tag 存
-            Object tag = view.getTag();
-            int fill = tag instanceof Integer ? (Integer) tag : normalFill;
-            d.setColor(fill);
-            d.setStroke(dp(1), Color.parseColor("#EBEBEF"));
+            GradientDrawable d = round(fill, 14);
+            if (fill == Color.TRANSPARENT) {
+                d.setStroke(0, Color.TRANSPARENT);
+            } else {
+                d.setStroke(dp(1), Color.parseColor("#E8E8ED"));
+            }
+            view.setBackground(d);
             view.setScaleX(1f);
             view.setScaleY(1f);
             view.setElevation(0);
