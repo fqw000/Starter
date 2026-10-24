@@ -190,7 +190,7 @@ public class SettingsActivity extends Activity {
         TextView clearBtn = text("清空列表", 12, C_RED, false);
         clearBtn.setPadding(dp(10), dp(5), dp(10), dp(5));
         clearBtn.setBackground(round(Color.TRANSPARENT, 8));
-        clearBtn.setTag(0x1001, Color.TRANSPARENT);
+        clearBtn.setTag(Color.TRANSPARENT);
         makeFocusable(clearBtn, true, () -> {
             prefs.setAutoApps(new ArrayList<>());
             refresh();
@@ -255,7 +255,7 @@ public class SettingsActivity extends Activity {
         tile.setBackground(d);
         // 内边距减小，按钮更扁
         tile.setPadding(dp(6), dp(8), dp(6), dp(8));
-        tile.setTag(0x1001, bgColor);
+        tile.setTag(bgColor);
 
         ImageView ic = new ImageView(this);
         int is = dp(28);
@@ -453,7 +453,7 @@ public class SettingsActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setBackground(round(C_ROW, 10));
-        row.setTag(0x1001, C_ROW);
+        row.setTag(C_ROW);
         return row;
     }
 
@@ -527,7 +527,7 @@ public class SettingsActivity extends Activity {
             view.setElevation(dp(8));
         } else {
             // 恢复：需要知道原始填充色 —— 用 tag 存
-            Object tag = view.getTag(0x1001);
+            Object tag = view.getTag();
             int fill = tag instanceof Integer ? (Integer) tag : normalFill;
             d.setColor(fill);
             d.setStroke(dp(1), Color.parseColor("#EBEBEF"));
