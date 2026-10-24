@@ -13,7 +13,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -21,8 +20,9 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * 自定义选择弹窗，对齐 HTML 设计稿：
- * 磨砂遮罩感（半透明黑）+ 圆角白卡片 + 列表项焦点高亮
+ * 自定义选择弹窗
+ * - 遮罩轻、外边距小
+ * - 整体统一小圆角（12dp），四角一致
  */
 public class PickerDialog extends Dialog {
 
@@ -33,7 +33,7 @@ public class PickerDialog extends Dialog {
     public static class Item {
         public String title;
         public String subtitle;
-        public boolean selected; // 当前使用
+        public boolean selected;
 
         public Item(String title, String subtitle, boolean selected) {
             this.title = title;
@@ -45,17 +45,17 @@ public class PickerDialog extends Dialog {
     private final String title;
     private final List<Item> items;
     private final OnPickListener listener;
-    private final String actionHint; // "按 OK 选择" / "+ 添加"
+    private final String actionHint;
 
     private static final int C_PANEL = Color.WHITE;
     private static final int C_ITEM = Color.parseColor("#F8FAFC");
     private static final int C_TEXT = Color.parseColor("#1D1D1F");
     private static final int C_SUB = Color.parseColor("#86868B");
     private static final int C_BRAND = Color.parseColor("#007AFF");
-    private static final int C_FOCUS = Color.parseColor("#007AFF");
     private static final int C_GREEN = Color.parseColor("#34C759");
     private static final int C_GREEN_BG = Color.parseColor("#E8F5E9");
     private static final int C_LINE = Color.parseColor("#F0F0F5");
+    private static final float RADIUS = 12f; // 统一小圆角
 
     private final int[] ICON_BG = {
             Color.parseColor("#E6F0FF"),
@@ -67,7 +67,7 @@ public class PickerDialog extends Dialog {
             Color.parseColor("#F1F3F5"),
     };
     private final int[] ICON_FG = {
-            Color.parseColor("#34C759"),
+            Color.parseColor("#007AFF"),
             Color.parseColor("#34C759"),
             Color.parseColor("#FF3B30"),
             Color.parseColor("#FF9800"),
@@ -90,46 +90,41 @@ public class PickerDialog extends Dialog {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 半透明遮罩
         Window window = getWindow();
         if (window != null) {
-            window.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#66000000")));
+            // 透明窗口底，不要黑框
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            window.setDimAmount(0.45f);
+            window.setDimAmount(0.35f);
         }
 
+        // 遮罩：轻暗 + 较小外边距（去掉「巨大黑边」感）
         LinearLayout overlay = new LinearLayout(getContext());
         overlay.setOrientation(LinearLayout.VERTICAL);
         overlay.setGravity(Gravity.CENTER);
-        overlay.setPadding(dp(48), dp(24), dp(48), dp(24));
-        // 点遮罩关闭
+        overlay.setPadding(dp(32), dp(28), dp(32), dp(28));
+        overlay.setBackgroundColor(Color.parseColor("#59000000"));
         overlay.setOnClickListener(v -> dismiss());
 
-        // 弹窗主体
+        // 弹窗白卡片：四角统一 12dp
         LinearLayout box = new LinearLayout(getContext());
         box.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable boxBg = new GradientDrawable();
         boxBg.setColor(C_PANEL);
-        boxBg.setCornerRadius(dp(20));
+        boxBg.setCornerRadius(dp((int) RADIUS));
         box.setBackground(boxBg);
-        LinearLayout.LayoutParams boxLp = new LinearLayout.LayoutParams(
-                dp(420), LinearLayout.LayoutParams.WRAP_CONTENT);
+        box.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        LinearLayout.LayoutParams boxLp = new LinearLayout.LayoutParams(dp(440), -2);
         box.setLayoutParams(boxLp);
-        // max height handled by scroll + parent padding
-        // 阻止点击穿透
-        box.setOnClickListener(v -> {});
+        box.setOnClickListener(v -> {}); // 拦截点击
 
-        // 头部
+        // 头部（上圆角由 box 裁剪保证）
         LinearLayout header = new LinearLayout(getContext());
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setPadding(dp(24), dp(20), dp(24), dp(14));
-        // 底部分割线
-        GradientDrawable headerBg = new GradientDrawable();
-        headerBg.setColor(C_PANEL);
-        header.setBackground(headerBg);
+        header.setPadding(dp(22), dp(18), dp(18), dp(14));
 
-        TextView titleView = text(title, 17, C_TEXT, true);
+        TextView titleView = text(title, 16, C_TEXT, true);
         titleView.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
         header.addView(titleView);
 
@@ -137,25 +132,25 @@ public class PickerDialog extends Dialog {
         closeHint.setPadding(dp(12), dp(5), dp(12), dp(5));
         GradientDrawable hintBg = new GradientDrawable();
         hintBg.setColor(C_ITEM);
-        hintBg.setCornerRadius(dp(12));
+        hintBg.setCornerRadius(dp(10));
         closeHint.setBackground(hintBg);
         header.addView(closeHint);
         box.addView(header);
 
-        // 分割线
         View line = new View(getContext());
         line.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(1)));
         line.setBackgroundColor(C_LINE);
         box.addView(line);
 
-        // 列表
         ScrollView scroll = new ScrollView(getContext());
-        LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, dp(360));
-        scroll.setLayoutParams(scrollLp);
+        int maxH = dp(340);
+        scroll.setLayoutParams(new LinearLayout.LayoutParams(-1, maxH));
         scroll.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        scroll.setClipToPadding(false);
+
         LinearLayout body = new LinearLayout(getContext());
         body.setOrientation(LinearLayout.VERTICAL);
-        body.setPadding(dp(20), dp(14), dp(20), dp(20));
+        body.setPadding(dp(16), dp(12), dp(16), dp(16));
         scroll.addView(body);
 
         for (int i = 0; i < items.size(); i++) {
@@ -174,7 +169,6 @@ public class PickerDialog extends Dialog {
         overlay.addView(box);
         setContentView(overlay);
 
-        // 默认焦点第一项
         body.post(() -> {
             if (body.getChildCount() > 0) {
                 View first = body.getChildAt(0);
@@ -190,46 +184,39 @@ public class PickerDialog extends Dialog {
         row.setPadding(dp(14), dp(12), dp(14), dp(12));
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(C_ITEM);
-        bg.setCornerRadius(dp(12));
-        bg.setStroke(dp(0), Color.TRANSPARENT);
+        bg.setCornerRadius(dp(10));
+        bg.setStroke(0, Color.TRANSPARENT);
         row.setBackground(bg);
         row.setFocusable(true);
         row.setFocusableInTouchMode(true);
         row.setClickable(true);
+        row.setTag(C_ITEM);
 
-        // 图标
-        String ch = "?";
-        if (item.title != null && item.title.length() > 0) {
-            ch = item.title.substring(0, 1);
-        }
-        TextView icon = text(ch, 14, ICON_FG[index % ICON_FG.length], true);
+        String ch = (item.title != null && item.title.length() > 0)
+                ? item.title.substring(0, 1) : "?";
+        TextView icon = text(ch, 13, ICON_FG[index % ICON_FG.length], true);
         icon.setGravity(Gravity.CENTER);
-        int is = dp(36);
-        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(is, is);
-        icon.setLayoutParams(ilp);
+        int is = dp(34);
+        icon.setLayoutParams(new LinearLayout.LayoutParams(is, is));
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setColor(ICON_BG[index % ICON_BG.length]);
-        iconBg.setCornerRadius(dp(10));
+        iconBg.setCornerRadius(dp(9));
         icon.setBackground(iconBg);
         row.addView(icon);
 
-        // 间距
         View gap = new View(getContext());
         gap.setLayoutParams(new LinearLayout.LayoutParams(dp(12), 1));
         row.addView(gap);
 
-        // 文字
         LinearLayout info = new LinearLayout(getContext());
         info.setOrientation(LinearLayout.VERTICAL);
         info.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView name = text(item.title, 14, C_TEXT, true);
+        info.addView(text(item.title, 14, C_TEXT, true));
         TextView pkg = text(item.subtitle != null ? item.subtitle : "", 11, C_SUB, false);
         pkg.setPadding(0, dp(2), 0, 0);
-        info.addView(name);
         info.addView(pkg);
         row.addView(info);
 
-        // 右侧状态 / 操作提示
         if (item.selected) {
             TextView badge = text("当前使用", 11, C_GREEN, true);
             badge.setPadding(dp(10), dp(4), dp(10), dp(4));
@@ -257,7 +244,8 @@ public class PickerDialog extends Dialog {
         });
 
         row.setOnFocusChangeListener((v, hasFocus) -> {
-            GradientDrawable d = (GradientDrawable) v.getBackground().mutate();
+            GradientDrawable d = new GradientDrawable();
+            d.setCornerRadius(dp(10));
             TextView hintView = null;
             for (int i = 0; i < row.getChildCount(); i++) {
                 View c = row.getChildAt(i);
@@ -268,17 +256,14 @@ public class PickerDialog extends Dialog {
             }
             if (hasFocus) {
                 d.setColor(Color.WHITE);
-                d.setStroke(dp(2), C_FOCUS);
-                v.setScaleX(1.02f);
-                v.setScaleY(1.02f);
+                d.setStroke(dp(2), C_BRAND);
                 if (hintView != null) hintView.setAlpha(1f);
             } else {
                 d.setColor(C_ITEM);
                 d.setStroke(0, Color.TRANSPARENT);
-                v.setScaleX(1f);
-                v.setScaleY(1f);
                 if (hintView != null) hintView.setAlpha(0.55f);
             }
+            v.setBackground(d);
         });
 
         return row;

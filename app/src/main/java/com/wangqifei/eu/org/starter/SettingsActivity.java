@@ -72,6 +72,8 @@ public class SettingsActivity extends Activity {
         page.setOrientation(LinearLayout.VERTICAL);
         page.setBackgroundColor(C_BG);
         page.setPadding(dp(36), dp(20), dp(36), dp(14));
+        page.setClipChildren(false);
+        page.setClipToPadding(false);
 
         // 顶栏
         LinearLayout header = new LinearLayout(this);
@@ -118,6 +120,8 @@ public class SettingsActivity extends Activity {
         LinearLayout left = card();
         left.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1.2f));
         left.setPadding(dp(18), dp(16), dp(18), dp(16));
+        left.setClipChildren(false);
+        left.setClipToPadding(false);
         buildLeft(left);
         body.addView(left);
         body.addView(hSpace(12));
@@ -195,7 +199,7 @@ public class SettingsActivity extends Activity {
         clearBtn.setPadding(dp(10), dp(5), dp(10), dp(5));
         clearBtn.setBackground(round(Color.TRANSPARENT, 8));
         clearBtn.setTag(Color.TRANSPARENT);
-        makeFocusable(clearBtn, true, () -> {
+        makeFocusable(clearBtn, () -> {
             prefs.setAutoApps(new ArrayList<>());
             refresh();
             toast("已清空");
@@ -253,18 +257,18 @@ public class SettingsActivity extends Activity {
         tile.setOrientation(LinearLayout.VERTICAL);
         tile.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, -1, 1f);
-        // 给焦点描边/放大留边，避免被父布局裁切
-        tlp.setMargins(dp(3), dp(3), dp(3), dp(3));
+        tlp.setMargins(dp(4), dp(4), dp(4), dp(4));
         tile.setLayoutParams(tlp);
         int bgColor = primary ? C_SAVE_BG : C_TILE;
-        GradientDrawable d = round(bgColor, 14);
+        GradientDrawable d = round(bgColor, 12);
         d.setStroke(dp(1), Color.parseColor("#E8E8ED"));
         tile.setBackground(d);
-        tile.setPadding(dp(8), dp(10), dp(8), dp(10));
+        // 上多下少：视觉中心偏上，图标更醒目
+        tile.setPadding(dp(10), dp(14), dp(10), dp(12));
         tile.setTag(bgColor);
 
         ImageView ic = new ImageView(this);
-        int is = dp(40); // 图标加大，与文字更协调
+        int is = dp(48); // 明显加大图标
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(is, is);
         ic.setLayoutParams(ilp);
         ic.setImageResource(iconRes);
@@ -272,12 +276,12 @@ public class SettingsActivity extends Activity {
         ic.setFocusable(false);
         tile.addView(ic);
 
-        TextView lb = text(label, 11, primary ? C_ACCENT : C_TITLE, true);
+        TextView lb = text(label, 12, primary ? C_ACCENT : C_TITLE, true);
         lb.setGravity(Gravity.CENTER);
-        lb.setPadding(0, dp(8), 0, 0);
+        lb.setPadding(0, dp(10), 0, 0);
         tile.addView(lb);
 
-        makeFocusable(tile, true, action);
+        makeFocusable(tile, action);
         return tile;
     }
 
@@ -323,6 +327,9 @@ public class SettingsActivity extends Activity {
 
     private LinearLayout autoAppRow(String pkg) {
         LinearLayout row = rowBg();
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
+        rlp.setMargins(dp(1), 0, dp(1), 0);
+        row.setLayoutParams(rlp);
         row.setPadding(dp(10), dp(9), dp(8), dp(9));
         row.setGravity(Gravity.CENTER_VERTICAL);
 
@@ -346,7 +353,7 @@ public class SettingsActivity extends Activity {
         remove.setTag("remove_btn");
         final String pkgFinal = pkg;
         final String labelFinal = label;
-        makeFocusable(remove, false, () -> {
+        makeFocusable(remove, () -> {
             prefs.removeAutoApp(pkgFinal);
             refresh();
             toast("已移除 " + labelFinal);
@@ -490,7 +497,7 @@ public class SettingsActivity extends Activity {
      * 焦点：白底 + 2px 蓝描边 + 轻微放大
      * （阴影用加粗描边近似，避免 elevation 在老设备不一致）
      */
-    private void makeFocusable(View v, boolean scale, Runnable action) {
+    private void makeFocusable(View v, Runnable action) {
         v.setFocusable(true);
         v.setFocusableInTouchMode(true);
         v.setClickable(true);
@@ -517,25 +524,24 @@ public class SettingsActivity extends Activity {
     private void applyFocusStyle(View view, boolean hasFocus, int normalFill) {
         Object tag = view.getTag();
         int fill = tag instanceof Integer ? (Integer) tag : normalFill;
-
+        // 不用 scale，避免被父布局裁切导致「只有一边有描边」
         if (hasFocus) {
-            // 白底 + 完整蓝色圆角描边 + 轻微放大 + 阴影
-            GradientDrawable d = round(Color.WHITE, 14);
+            GradientDrawable d = new GradientDrawable();
+            d.setColor(Color.WHITE);
+            d.setCornerRadius(dp(12));
             d.setStroke(dp(2), C_FOCUS);
             view.setBackground(d);
-            view.setScaleX(1.025f);
-            view.setScaleY(1.025f);
-            view.setElevation(dp(10));
+            view.setElevation(dp(6));
         } else {
-            GradientDrawable d = round(fill, 14);
-            if (fill == Color.TRANSPARENT) {
+            GradientDrawable d = new GradientDrawable();
+            d.setColor(fill == 0 ? Color.TRANSPARENT : fill);
+            d.setCornerRadius(dp(12));
+            if (fill == Color.TRANSPARENT || fill == 0) {
                 d.setStroke(0, Color.TRANSPARENT);
             } else {
                 d.setStroke(dp(1), Color.parseColor("#E8E8ED"));
             }
             view.setBackground(d);
-            view.setScaleX(1f);
-            view.setScaleY(1f);
             view.setElevation(0);
         }
     }
