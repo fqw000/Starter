@@ -13,17 +13,13 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * 自定义选择弹窗
- * - 遮罩轻、外边距小
- * - 整体统一小圆角（12dp），四角一致
- */
 public class PickerDialog extends Dialog {
 
     public interface OnPickListener {
@@ -55,35 +51,28 @@ public class PickerDialog extends Dialog {
     private static final int C_GREEN = Color.parseColor("#34C759");
     private static final int C_GREEN_BG = Color.parseColor("#E8F5E9");
     private static final int C_LINE = Color.parseColor("#F0F0F5");
-    private static final float RADIUS = 12f; // 统一小圆角
 
     private final int[] ICON_BG = {
-            Color.parseColor("#E6F0FF"),
-            Color.parseColor("#E8F5E9"),
-            Color.parseColor("#FFF0F0"),
-            Color.parseColor("#FFF3E0"),
-            Color.parseColor("#F3E5F5"),
-            Color.parseColor("#E0F7FA"),
+            Color.parseColor("#E6F0FF"), Color.parseColor("#E8F5E9"),
+            Color.parseColor("#FFF0F0"), Color.parseColor("#FFF3E0"),
+            Color.parseColor("#F3E5F5"), Color.parseColor("#E0F7FA"),
             Color.parseColor("#F1F3F5"),
     };
     private final int[] ICON_FG = {
-            Color.parseColor("#007AFF"),
-            Color.parseColor("#34C759"),
-            Color.parseColor("#FF3B30"),
-            Color.parseColor("#FF9800"),
-            Color.parseColor("#9C27B0"),
-            Color.parseColor("#00ACC1"),
+            Color.parseColor("#007AFF"), Color.parseColor("#34C759"),
+            Color.parseColor("#FF3B30"), Color.parseColor("#FF9800"),
+            Color.parseColor("#9C27B0"), Color.parseColor("#00ACC1"),
             Color.parseColor("#555555"),
     };
 
     public PickerDialog(Context context, String title, List<Item> items,
                         String actionHint, OnPickListener listener) {
-        super(context);
+        // 使用半透明主题，避免系统默认黑框
+        super(context, android.R.style.Theme_Translucent_NoTitleBar);
         this.title = title;
         this.items = items;
         this.actionHint = actionHint;
         this.listener = listener;
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
     }
 
     @Override
@@ -92,33 +81,36 @@ public class PickerDialog extends Dialog {
 
         Window window = getWindow();
         if (window != null) {
-            // 透明窗口底，不要黑框
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0f); // 自己画遮罩，不要系统 dim 黑框
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            window.setDimAmount(0.35f);
+            WindowManager.LayoutParams lp = window.getAttributes();
+            lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+            lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+            window.setAttributes(lp);
         }
 
-        // 遮罩：轻暗 + 较小外边距（去掉「巨大黑边」感）
+        // 全屏半透明遮罩（不是包在弹窗外的黑矩形）
         LinearLayout overlay = new LinearLayout(getContext());
+        overlay.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
         overlay.setOrientation(LinearLayout.VERTICAL);
         overlay.setGravity(Gravity.CENTER);
-        overlay.setPadding(dp(32), dp(28), dp(32), dp(28));
-        overlay.setBackgroundColor(Color.parseColor("#59000000"));
+        overlay.setBackgroundColor(Color.parseColor("#66000000"));
+        overlay.setPadding(dp(40), dp(32), dp(40), dp(32));
         overlay.setOnClickListener(v -> dismiss());
 
-        // 弹窗白卡片：四角统一 12dp
         LinearLayout box = new LinearLayout(getContext());
         box.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable boxBg = new GradientDrawable();
         boxBg.setColor(C_PANEL);
-        boxBg.setCornerRadius(dp((int) RADIUS));
+        boxBg.setCornerRadius(dp(12));
         box.setBackground(boxBg);
-        box.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         LinearLayout.LayoutParams boxLp = new LinearLayout.LayoutParams(dp(440), -2);
         box.setLayoutParams(boxLp);
-        box.setOnClickListener(v -> {}); // 拦截点击
+        box.setOnClickListener(v -> {});
 
-        // 头部（上圆角由 box 裁剪保证）
         LinearLayout header = new LinearLayout(getContext());
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
@@ -143,10 +135,8 @@ public class PickerDialog extends Dialog {
         box.addView(line);
 
         ScrollView scroll = new ScrollView(getContext());
-        int maxH = dp(340);
-        scroll.setLayoutParams(new LinearLayout.LayoutParams(-1, maxH));
+        scroll.setLayoutParams(new LinearLayout.LayoutParams(-1, dp(340)));
         scroll.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-        scroll.setClipToPadding(false);
 
         LinearLayout body = new LinearLayout(getContext());
         body.setOrientation(LinearLayout.VERTICAL);
@@ -170,9 +160,8 @@ public class PickerDialog extends Dialog {
         setContentView(overlay);
 
         body.post(() -> {
-            if (body.getChildCount() > 0) {
-                View first = body.getChildAt(0);
-                if (first != null) first.requestFocus();
+            if (body.getChildCount() > 0 && body.getChildAt(0) != null) {
+                body.getChildAt(0).requestFocus();
             }
         });
     }
@@ -185,12 +174,10 @@ public class PickerDialog extends Dialog {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(C_ITEM);
         bg.setCornerRadius(dp(10));
-        bg.setStroke(0, Color.TRANSPARENT);
         row.setBackground(bg);
         row.setFocusable(true);
         row.setFocusableInTouchMode(true);
         row.setClickable(true);
-        row.setTag(C_ITEM);
 
         String ch = (item.title != null && item.title.length() > 0)
                 ? item.title.substring(0, 1) : "?";

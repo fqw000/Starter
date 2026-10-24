@@ -120,8 +120,9 @@ public class SettingsActivity extends Activity {
         LinearLayout left = card();
         left.setLayoutParams(new LinearLayout.LayoutParams(0, -1, 1.2f));
         left.setPadding(dp(18), dp(16), dp(18), dp(16));
-        left.setClipChildren(false);
-        left.setClipToPadding(false);
+        // 左侧需要裁剪，避免自启列表滚动时画出卡片外
+        left.setClipChildren(true);
+        left.setClipToPadding(true);
         buildLeft(left);
         body.addView(left);
         body.addView(hSpace(12));
@@ -211,6 +212,9 @@ public class SettingsActivity extends Activity {
         ScrollView sv = new ScrollView(this);
         sv.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
         sv.setDescendantFocusability(android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        sv.setFillViewport(false);
+        sv.setClipToPadding(true);
+        sv.setClipChildren(true);
         autoAppsContainer = new LinearLayout(this);
         autoAppsContainer.setOrientation(LinearLayout.VERTICAL);
         sv.addView(autoAppsContainer);
@@ -360,18 +364,32 @@ public class SettingsActivity extends Activity {
         });
         row.addView(remove);
 
-        // 行本身可获焦：获焦时显示移除
+        // 行本身可获焦：获焦时显示移除；按确定 / 点击行 = 移除该自启动项
         row.setFocusable(true);
         row.setFocusableInTouchMode(true);
+        row.setClickable(true);
+        Runnable doRemove = () -> {
+            prefs.removeAutoApp(pkgFinal);
+            refresh();
+            toast("已移除 " + labelFinal);
+        };
+        row.setOnClickListener(v -> doRemove.run());
+        row.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_UP
+                    && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                    || keyCode == KeyEvent.KEYCODE_ENTER)) {
+                doRemove.run();
+                return true;
+            }
+            return false;
+        });
         row.setOnFocusChangeListener((v, hasFocus) -> {
             remove.setVisibility(hasFocus ? View.VISIBLE : View.INVISIBLE);
             applyFocusStyle(v, hasFocus, C_ROW);
             if (hasFocus) {
-                // 让移除也可被右键聚焦
                 remove.setFocusable(true);
             }
         });
-        // 点击行不做事；方向键右可到移除
         return row;
     }
 
