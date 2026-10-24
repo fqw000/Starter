@@ -52,7 +52,7 @@ public class PickerDialog extends Dialog {
     private static final int C_TEXT = Color.parseColor("#1D1D1F");
     private static final int C_SUB = Color.parseColor("#86868B");
     private static final int C_BRAND = Color.parseColor("#007AFF");
-    private static final int C_FOCUS = Color.parseColor("#34C759");
+    private static final int C_FOCUS = Color.parseColor("#007AFF");
     private static final int C_GREEN = Color.parseColor("#34C759");
     private static final int C_GREEN_BG = Color.parseColor("#E8F5E9");
     private static final int C_LINE = Color.parseColor("#F0F0F5");
