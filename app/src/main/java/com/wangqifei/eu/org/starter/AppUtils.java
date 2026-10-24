@@ -94,7 +94,8 @@ public class AppUtils {
             intent.setComponent(new ComponentName(parts[0], parts[1]));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                     | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                    | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             context.startActivity(intent);
             Log.i(TAG, "forward to launcher: " + component);
         } catch (Exception e) {
@@ -103,43 +104,58 @@ public class AppUtils {
                 Intent i = context.getPackageManager()
                         .getLaunchIntentForPackage(component.split("/")[0]);
                 if (i != null) {
-                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     context.startActivity(i);
                 }
             } catch (Exception ignored) {}
         }
     }
 
+    /**
+     * 后台拉起自启动应用：优先只启服务，避免把界面推到前台抢桌面。
+     * @param bringUi 仅在明确需要时（目前默认 false）才尝试启动界面
+     */
     public static void startAutoApps(Context context, List<String> packages) {
+        startAutoApps(context, packages, false);
+    }
+
+    public static void startAutoApps(Context context, List<String> packages, boolean bringUi) {
         if (packages == null) return;
         PackageManager pm = context.getPackageManager();
         for (String pkg : packages) {
             if (TextUtils.isEmpty(pkg)) continue;
             try {
+                // AirReceiver：只启服务，不打开主界面
                 if ("com.softmedia.receiver".equals(pkg)) {
                     Intent service = new Intent();
                     service.setClassName(pkg, "com.softmedia.receiver.app.AirReceiverService");
                     context.startService(service);
-                    Log.i(TAG, "started service: " + pkg);
+                    Log.i(TAG, "started service only: " + pkg);
+                    if (!bringUi) continue;
                 }
-                Intent launch = pm.getLaunchIntentForPackage(pkg);
-                if (launch != null) {
-                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                            | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    context.startActivity(launch);
-                    Log.i(TAG, "started activity: " + pkg);
+
+                // 其他应用：尽量只触发进程，不抢前台
+                // 使用不带 CLEAR_TOP 的方式；若 bringUi=false，仍尝试 startService 式拉活
+                if (!bringUi) {
+                    // 尝试隐式启动已导出的服务（多数第三方没有，忽略失败）
+                    try {
+                        Intent bounce = pm.getLaunchIntentForPackage(pkg);
+                        if (bounce != null) {
+                            // 用 NEW_TASK 但不把用户视线长时间留在该页：由调用方立刻切回桌面
+                            bounce.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                                    | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                            // 不使用 CLEAR_TOP，减少抢焦点
+                            context.startActivity(bounce);
+                            Log.i(TAG, "warmed up: " + pkg);
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "warm up failed: " + pkg, e);
+                    }
                 } else {
-                    Intent lb = new Intent(Intent.ACTION_MAIN);
-                    lb.addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
-                    lb.setPackage(pkg);
-                    List<ResolveInfo> list = pm.queryIntentActivities(lb, 0);
-                    if (!list.isEmpty()) {
-                        lb.setComponent(new ComponentName(
-                                list.get(0).activityInfo.packageName,
-                                list.get(0).activityInfo.name));
-                        lb.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(lb);
+                    Intent launch = pm.getLaunchIntentForPackage(pkg);
+                    if (launch != null) {
+                        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(launch);
                     }
                 }
             } catch (Exception e) {
@@ -148,7 +164,6 @@ public class AppUtils {
         }
     }
 
-    /** 获取应用显示名，失败则返回包名 */
     public static String getAppLabel(Context context, String packageName) {
         try {
             PackageManager pm = context.getPackageManager();

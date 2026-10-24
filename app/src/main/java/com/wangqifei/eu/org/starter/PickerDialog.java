@@ -52,6 +52,7 @@ public class PickerDialog extends Dialog {
     private static final int C_TEXT = Color.parseColor("#1D1D1F");
     private static final int C_SUB = Color.parseColor("#86868B");
     private static final int C_BRAND = Color.parseColor("#007AFF");
+    private static final int C_FOCUS = Color.parseColor("#34C759");
     private static final int C_GREEN = Color.parseColor("#34C759");
     private static final int C_GREEN_BG = Color.parseColor("#E8F5E9");
     private static final int C_LINE = Color.parseColor("#F0F0F5");
@@ -66,7 +67,7 @@ public class PickerDialog extends Dialog {
             Color.parseColor("#F1F3F5"),
     };
     private final int[] ICON_FG = {
-            Color.parseColor("#007AFF"),
+            Color.parseColor("#34C759"),
             Color.parseColor("#34C759"),
             Color.parseColor("#FF3B30"),
             Color.parseColor("#FF9800"),
@@ -267,7 +268,7 @@ public class PickerDialog extends Dialog {
             }
             if (hasFocus) {
                 d.setColor(Color.WHITE);
-                d.setStroke(dp(2), C_BRAND);
+                d.setStroke(dp(2), C_FOCUS);
                 v.setScaleX(1.02f);
                 v.setScaleY(1.02f);
                 if (hintView != null) hintView.setAlpha(1f);

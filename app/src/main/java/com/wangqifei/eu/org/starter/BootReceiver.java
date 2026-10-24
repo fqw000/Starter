@@ -21,9 +21,10 @@ public class BootReceiver extends BroadcastReceiver {
 
         prefs.setNeedAutoStart(true);
 
+        // 后台拉自启动，不打开界面
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Log.i(TAG, "BootReceiver start auto apps");
-            AppUtils.startAutoApps(context, prefs.getAutoApps());
+            Log.i(TAG, "BootReceiver start auto apps (bg)");
+            AppUtils.startAutoApps(context, prefs.getAutoApps(), false);
         }, 8000);
     }
 }

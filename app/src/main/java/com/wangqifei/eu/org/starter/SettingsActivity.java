@@ -45,7 +45,7 @@ public class SettingsActivity extends Activity {
     private static final int C_GREEN_BG = Color.parseColor("#E8F8EC");
     private static final int C_RED = Color.parseColor("#FF3B30");
     private static final int C_ROW = Color.parseColor("#F7F8FA");
-    private static final int C_FOCUS = Color.parseColor("#FF9F0A");
+    private static final int C_FOCUS = Color.parseColor("#34C759");
     private static final int C_TILE_BG = Color.parseColor("#FAFBFC");
     private static final int C_SAVE_BG = Color.parseColor("#E8F1FF");
 
@@ -202,9 +202,9 @@ public class SettingsActivity extends Activity {
         LinearLayout row1 = new LinearLayout(this);
         row1.setOrientation(LinearLayout.HORIZONTAL);
         row1.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
-        row1.addView(actionTile("🖥", "选择桌面", false, this::showLauncherPicker));
+        row1.addView(actionTile("⌂", "选择桌面", false, this::showLauncherPicker));
         row1.addView(hSpace(10));
-        row1.addView(actionTile("＋", "选择自启应用", false, this::showAppPicker));
+        row1.addView(actionTile("+", "选择自启应用", false, this::showAppPicker));
         right.addView(row1);
 
         right.addView(spacer(10));
@@ -212,12 +212,12 @@ public class SettingsActivity extends Activity {
         LinearLayout row2 = new LinearLayout(this);
         row2.setOrientation(LinearLayout.HORIZONTAL);
         row2.setLayoutParams(new LinearLayout.LayoutParams(-1, 0, 1f));
-        row2.addView(actionTile("▶", "模拟开机测试", false, () -> {
+        row2.addView(actionTile("▷", "模拟开机测试", false, () -> {
             prefs.setNeedAutoStart(true);
             toast("已标记，按 Home 测试");
         }));
         row2.addView(hSpace(10));
-        row2.addView(actionTile("💾", "保存设置", true, () -> {
+        row2.addView(actionTile("✓", "保存设置", true, () -> {
             if (prefs.getRealLauncher() == null) {
                 toast("请先选择真正的桌面");
                 return;
@@ -240,7 +240,7 @@ public class SettingsActivity extends Activity {
         tile.setBackground(d);
         tile.setPadding(dp(8), dp(12), dp(8), dp(12));
 
-        TextView ic = text(icon, 22, primary ? C_ACCENT : C_TITLE, false);
+        TextView ic = text(icon, 26, primary ? C_ACCENT : C_TITLE, false);
         ic.setGravity(Gravity.CENTER);
         TextView lb = text(label, 13, primary ? C_ACCENT : C_TITLE, true);
         lb.setGravity(Gravity.CENTER);
