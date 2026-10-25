@@ -329,6 +329,7 @@ public class SettingsActivity extends Activity {
         }
     }
 
+
     private LinearLayout autoAppRow(String pkg) {
         LinearLayout row = rowBg();
         LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
@@ -350,29 +351,40 @@ public class SettingsActivity extends Activity {
         info.addView(p);
         row.addView(info);
 
-        // 移除：默认隐藏，行获焦时显示
+        final String pkgFinal = pkg;
+        final String labelFinal = label;
+
+        // 删除后焦点落到上一项（没有则第一项）
+        Runnable doRemove = () -> {
+            List<String> before = prefs.getAutoApps();
+            int idx = before.indexOf(pkgFinal);
+            prefs.removeAutoApp(pkgFinal);
+            refresh();
+            toast("已移除 " + labelFinal);
+            autoAppsContainer.post(() -> {
+                java.util.ArrayList<View> rows = new java.util.ArrayList<>();
+                for (int i = 0; i < autoAppsContainer.getChildCount(); i++) {
+                    View c = autoAppsContainer.getChildAt(i);
+                    if (c != null && c.isFocusable()) rows.add(c);
+                }
+                if (rows.isEmpty()) return;
+                int target = idx - 1;
+                if (target < 0) target = 0;
+                if (target >= rows.size()) target = rows.size() - 1;
+                rows.get(target).requestFocus();
+            });
+        };
+
         TextView remove = text("移除", 12, C_RED, false);
         remove.setPadding(dp(10), dp(5), dp(10), dp(5));
         remove.setVisibility(View.INVISIBLE);
         remove.setTag("remove_btn");
-        final String pkgFinal = pkg;
-        final String labelFinal = label;
-        makeFocusable(remove, () -> {
-            prefs.removeAutoApp(pkgFinal);
-            refresh();
-            toast("已移除 " + labelFinal);
-        });
+        makeFocusable(remove, doRemove);
         row.addView(remove);
 
-        // 行本身可获焦：获焦时显示移除；按确定 / 点击行 = 移除该自启动项
         row.setFocusable(true);
         row.setFocusableInTouchMode(true);
         row.setClickable(true);
-        Runnable doRemove = () -> {
-            prefs.removeAutoApp(pkgFinal);
-            refresh();
-            toast("已移除 " + labelFinal);
-        };
         row.setOnClickListener(v -> doRemove.run());
         row.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() == KeyEvent.ACTION_UP
@@ -386,12 +398,11 @@ public class SettingsActivity extends Activity {
         row.setOnFocusChangeListener((v, hasFocus) -> {
             remove.setVisibility(hasFocus ? View.VISIBLE : View.INVISIBLE);
             applyFocusStyle(v, hasFocus, C_ROW);
-            if (hasFocus) {
-                remove.setFocusable(true);
-            }
+            if (hasFocus) remove.setFocusable(true);
         });
         return row;
     }
+
 
     private void showLauncherPicker() {
         if (launchers.isEmpty()) {
